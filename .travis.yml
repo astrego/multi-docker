@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+service:
+  - docker
+
+before_install:
+  - docker build -t astrego/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true astrego/react-test npm test
+
+after_success:
+  - docker build -t astrego/multi-client ./client
+  - docker build -t astrego/multi-nginx ./nginx
+  - docker build -t astrego/multi-server ./server
+  - docker build -t astrego/multi-worker ./worker
+
+  - echo "DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push astrego/multi-client
+  - docker push astrego/multi-nginx
+  - docker push astrego/multi-server
+  - docker push astrego/multi-worker
